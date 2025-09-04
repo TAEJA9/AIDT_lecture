@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>연수 신청 | Y클라우드 에듀테크</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="bg-slate-50">
+  <header class="bg-slate-800 text-white">
+    <div class="mx-auto max-w-6xl px-6 py-20 text-center">
+      <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight">에듀테크ㆍAIDT 연수 신청</h1>
+      <p class="mt-4 max-w-2xl mx-auto text-lg text-slate-300">교원의 디지털 역량 강화를 위한 전문적이고 체계적인 맞춤형 연수 프로그램을 신청하세요.</p>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl p-4 md:p-6 space-y-12">
+    <section id="programs">
+      <h2 class="sec-title">진행 가능한 연수 프로그램</h2>
+      <div class="tabs">
+        <button id="tabAIDT" class="tab active">🚀 AIDT</button>
+        <button id="tabEDU"  class="tab">🎨 에듀테크</button>
+      </div>
+      <div class="mt-8">
+        <div id="gridAIDT" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        <div id="gridEDU"  class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></div>
+      </div>
+      <p id="programEmpty" class="empty hidden">현재 등록된 프로그램이 없습니다.</p>
+    </section>
+
+    <section id="calendar">
+      <h2 class="sec-title">연수 일정 및 신청 현황</h2>
+      <div class="calendar-card">
+        <div class="cal-header">
+          <button id="prevMonth" class="cal-nav">‹</button>
+          <h3 id="calTitle" class="cal-title"></h3>
+          <button id="nextMonth" class="cal-nav">›</button>
+        </div>
+        <div class="cal-weekdays">
+          <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+        </div>
+        <div id="calGrid" class="cal-grid"></div>
+        <div class="cal-legend">
+          <span><i class="dot dot-approved"></i>확정</span>
+          <span><i class="dot dot-pending"></i>신청중</span>
+        </div>
+      </div>
+    </section>
+    
+    <section id="application">
+      <h2 class="sec-title">연수 신청하기</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <form id="applicationForm" class="lg:col-span-2 card" novalidate>
+            <div class="space-y-6">
+              <fieldset>
+                <legend class="field-title">기관 정보</legend>
+                <div class="grid sm:grid-cols-2 gap-4">
+                  <div class="field"><label for="region">지역</label><select id="region" class="input" required></select></div>
+                  <div class="field"><label for="orgType">기관 유형</label><select id="orgType" class="input" required></select></div>
+                  <div class="field"><label for="schoolName">학교명</label><input id="schoolName" type="text" class="input" required /></div>
+                  <div class="field"><label for="contactName">담당자명</label><input id="contactName" type="text" class="input" required /></div>
+                  <div class="field"><label for="email">이메일</label><input id="email" type="email" class="input" required /></div>
+                  <div class="field"><label for="phone1">휴대폰 번호</label>
+                    <div class="grid grid-cols-3 gap-2">
+                      <select id="phone1" class="input"><option>010</option><option>011</option><option>016</option><option>017</option><option>018</option><option>019</option></select>
+                      <input id="phone2" type="tel" maxlength="4" class="input" placeholder="0000" required />
+                      <input id="phone3" type="tel" maxlength="4" class="input" placeholder="0000" required />
+                    </div>
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend class="field-title">연수 정보</legend>
+                <div class="space-y-4">
+                  <div class="field"><label>연수 주제</label>
+                    <div class="topic-group">
+                      <label class="topic-item"><input type="radio" name="trainingType" value="AIDT" required /><span>🚀 AIDT 활용 연수</span></label>
+                      <label class="topic-item"><input type="radio" name="trainingType" value="에듀테크" required /><span>🎨 에듀테크 활용 연수</span></label>
+                    </div>
+                  </div>
+                  <div id="courseWrap" class="field hidden"><label for="courseDropdown">상세 강의 선택</label><select id="courseDropdown" class="input" required></select></div>
+                  <div class="grid sm:grid-cols-2 gap-4">
+                    <div class="field"><label for="wish1DT">1순위 희망 일시</label><input id="wish1DT" type="datetime-local" class="input" step="1800" required /><small id="wish1Warn" class="warn"></small></div>
+                    <div class="field"><label for="wish2DT">2순위 희망 일시</label><input id="wish2DT" type="datetime-local" class="input" step="1800" /><small id="wish2Warn" class="warn"></small></div>
+                  </div>
+                  <div class="field"><label for="attendees">참석 인원 (최대 40명)</label><input id="attendees" type="number" min="1" max="40" class="input" required /></div>
+                  <div class="field"><label for="inquiry">문의사항 (선택)</label><textarea id="inquiry" rows="3" class="input" placeholder="일정 관련 요청사항 등을 적어주세요"></textarea></div>
+                </div>
+              </fieldset>
+              
+              <div class="policy">
+                <details>
+                  <summary>
+                    <label class="flex items-center gap-3 cursor-pointer">
+                      <input id="privacyAgree" type="checkbox" class="checkbox" required />
+                      <span class="font-medium">개인정보 수집 및 이용에 동의합니다. (필수)</span>
+                    </label>
+                  </summary>
+                  <div class="policy-box">
+                    <p><b>수집 항목</b> : 학교명, 담당자명, 이메일, 연락처, 희망 연수 정보</p>
+                    <p><b>수집 목적</b> : 연수 신청 접수, 일정 조율, 안내 연락</p>
+                    <p><b>보유 기간</b> : 연수 종료 후 1년 (관계 법령에 따름)</p>
+                  </div>
+                </details>
+              </div>
+            </div>
+          <div class="mt-8 flex items-center justify-between gap-4">
+            <button type="submit" class="btn-primary w-full">연수 신청하기</button>
+            <small id="editHint" class="text-gray-500 hidden whitespace-nowrap">※ 수정 모드</small>
+          </div>
+        </form>
+
+        <aside class="space-y-6">
+            <div id="myStatus" class="card hidden">
+                <h3 class="field-title">내 신청 현황</h3>
+                <div class="space-y-2 text-sm mt-3">
+                    <div class="flex justify-between"><span>기관명:</span><b id="statusSchool"></b></div>
+                    <div class="flex justify-between"><span>1순위:</span><b id="statusWish1"></b></div>
+                    <div class="flex justify-between"><span>2순위:</span><b id="statusWish2"></b></div>
+                    <div class="flex justify-between"><span>상태:</span><b id="statusText"></b></div>
+                </div>
+                 <div class="flex gap-2 mt-4">
+                    <button id="btnEdit" class="btn-secondary w-full hidden">수정</button>
+                    <button id="btnCancel" class="btn-danger w-full hidden">취소</button>
+                </div>
+            </div>
+            <div class="p-6 rounded-2xl bg-slate-100 border">
+              <h3 class="field-title">신청 절차 안내</h3>
+              <ol class="list-decimal list-inside text-sm text-slate-600 space-y-2 mt-3">
+                <li>신청서 작성 후 '연수 신청하기' 클릭</li>
+                <li>담당자 확인 후 2~3일 내 연락</li>
+                <li>세부 일정 및 내용 조율</li>
+                <li>연수 확정 및 진행</li>
+              </ol>
+            </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+  
+  <div id="programModal" class="modal hidden"><div class="modal-card">
+      <div class="modal-head"><h3 id="modalTitle" class="text-xl font-bold"></h3><button id="closeModal">✕</button></div>
+      <div class="modal-body">
+        <div><h4>연수 시 사용하는 프로그램</h4><div id="modalTool" class="modal-box"></div></div>
+        <div><h4>추천 대상</h4><div id="modalRecommend" class="modal-box"></div></div>
+        <div><h4>기대 효과</h4><div id="modalEffect" class="modal-box"></div></div>
+      </div>
+      <div class="modal-foot"><button id="modalOk" class="btn-primary">확인</button></div>
+  </div></div>
+  <div id="dayModal" class="modal hidden"><div class="modal-card wide">
+      <div class="modal-head"><h3 id="dayTitle" class="text-xl font-bold"></h3><button id="closeDay">✕</button></div>
+      <div class="modal-body"><div class="table-wrap">
+          <table class="tbl">
+            <thead><tr><th>시간</th><th>상태</th><th>기관명</th><th>강의명</th></tr></thead>
+            <tbody id="dayTbody"></tbody>
+          </table>
+      </div></div>
+      <div class="modal-foot"><button id="dayOk" class="btn-primary">확인</button></div>
+  </div></div>
+
+  <div id="toast" class="toast"></div>
+
+  <script type="module" src="./firebase.js"></script>
+  <script type="module" src="./calendar.js"></script>
+  <script type="module" src="./app.js"></script>
+  <script>
+    // 지역 및 기관 유형 옵션 추가 (JS에서 관리하는 것보다 간단)
+    const regions = "서울특별시,부산광역시,대구광역시,인천광역시,광주광역시,대전광역시,울산광역시,세종특별자치시,경기도,강원특별자치도,충청북도,충청남도,전북특별자치도,전라남도,경상북도,경상남도,제주특별자치도".split(',');
+    const orgTypes = "초등학교,중학교,고등학교,대학교,교육청,기타".split(',');
+    const regionSelect = document.getElementById('region');
+    const orgTypeSelect = document.getElementById('orgType');
+    regionSelect.innerHTML = '<option value="">지역 선택</option>' + regions.map(r => `<option value="${r}">${r}</option>`).join('');
+    orgTypeSelect.innerHTML = '<option value="">기관 유형 선택</option>' + orgTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+  </script>
+</body>
+</html>

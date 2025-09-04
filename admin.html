@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>관리자 | 연수 시스템</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn-tailwindcss.vercel.app/"></script>
+  <style>
+    /* 기존 CSS + 테이블 레이아웃 개선 CSS */
+    #appTable th, #appTable td { white-space: nowrap; vertical-align: middle; }
+    #appTable th:nth-child(1), #appTable td:nth-child(1),
+    #appTable th:nth-child(2), #appTable td:nth-child(2),
+    #appTable th:nth-child(3), #appTable td:nth-child(3),
+    #appTable th:nth-child(5), #appTable td:nth-child(5),
+    #appTable th:nth-child(7), #appTable td:nth-child(7),
+    #appTable th:nth-child(8), #appTable td:nth-child(8),
+    #appTable th:nth-child(9), #appTable td:nth-child(9),
+    #appTable th:nth-child(10), #appTable td:nth-child(10) { width: min-content; }
+    #appTable th:nth-child(6), #appTable td:nth-child(6) { width: 100%; }
+
+    .admin-aside { transition: width 0.3s ease-in-out, transform 0.3s ease-in-out; }
+    .admin-main { transition: margin-left 0.3s ease-in-out; margin-left: 256px; }
+    .admin-aside.collapsed { width: 80px; }
+    .admin-aside.collapsed .nav-label, .admin-aside.collapsed .admin-logo .nav-label { opacity: 0; width: 0; overflow: hidden; }
+    .admin-layout.aside-collapsed .admin-main { margin-left: 80px; }
+
+    @media (max-width: 1023px) {
+      .admin-aside { transform: translateX(-100%); width: 256px; }
+      .admin-aside.open { transform: translateX(0%); }
+      .admin-main { margin-left: 0 !important; }
+    }
+
+    th[data-sort] { cursor: pointer; position: relative; user-select: none; }
+    th[data-sort] .sort-icon { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: #9ca3af; }
+    th[data-sort].asc .sort-icon, th[data-sort].desc .sort-icon { color: #3b82f6; }
+
+    .cal-grid-admin { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-cell-admin { aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; cursor: pointer; border: 1px solid transparent; }
+    .cal-cell-admin.weekday { background-color: #f1f5f9; }
+    .cal-cell-admin.weekend { background-color: #f8fafc; color: #94a3b8; }
+    .cal-cell-admin.exception-open { background-color: #dbeafe; color: #1d4ed8; border-color: #93c5fd; font-weight: 600; }
+    .cal-cell-admin.exception-close { background-color: #fee2e2; color: #991b1b; border-color: #fca5a5; font-weight: 600; text-decoration: line-through; }
+  </style>
+</head>
+<body class="bg-slate-100">
+  <div class="admin-layout" id="layout">
+    <aside class="admin-aside fixed top-0 left-0 h-full w-64 bg-gray-800 text-white flex flex-col z-30" id="aside">
+        <div class="flex items-center justify-between h-16 px-4 shrink-0 border-b border-gray-700">
+            <div class="admin-logo flex items-center gap-3"><svg class="w-8 h-8 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-1.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25A2.25 2.25 0 015.25 3h9.75a2.25 2.25 0 012.25 2.25zm0 0L21 3m0 0h-3.375M21 3v3.375" /></svg><span class="nav-label text-lg font-semibold whitespace-nowrap">연수 관리자</span></div>
+            <button id="asideToggle" class="btn-mini p-2 rounded-md hover:bg-gray-700 lg:hidden" title="메뉴 열기/닫기"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg></button>
+            <button id="asideDesktopToggle" class="btn-mini hidden lg:block p-2 rounded-md hover:bg-gray-700" title="메뉴 접기/펼치기"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg></button>
+        </div>
+        <nav class="admin-nav flex-grow p-4 space-y-2">
+            <a href="./index.html" class="flex items-center gap-3 px-4 py-2.5 text-sm rounded-md hover:bg-gray-700"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg><span class="nav-label whitespace-nowrap">사용자 페이지</span></a>
+            <button class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-sm rounded-md bg-indigo-500 text-white" data-view="apps"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" /></svg><span class="nav-label whitespace-nowrap">신청 관리</span></button>
+            <button class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-sm rounded-md hover:bg-gray-700" data-view="courses"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path d="M12 14l9-5-9-5-9 5 9 5z" /><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-5.998 12.078 12.078 0 01.665-6.479L12 14z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-5.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222 4 2.222V20M1 12l11 6 11-6M1 12v6a1 1 0 001 1h20a1 1 0 001-1v-6" /></svg><span class="nav-label whitespace-nowrap">강의 관리</span></button>
+            <button class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-sm rounded-md hover:bg-gray-700" data-view="calendar"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0h18M-4.5 12h22.5" /></svg><span class="nav-label whitespace-nowrap">일정 관리</span></button>
+        </nav>
+    </aside>
+
+    <main class="admin-main p-6 lg:p-8">
+        <section id="view-apps" class="view-section">
+            <h1 class="text-3xl font-bold mb-6 text-gray-800">연수 신청 관리</h1>
+            <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+                <div class="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+                    <div class="flex gap-2 items-center flex-grow">
+                        <input id="filterInput" class="block w-full rounded-md border-gray-300 shadow-sm" placeholder="검색..." />
+                        <select id="statusFilter" class="block rounded-md border-gray-300 shadow-sm">
+                            <option value="">전체 상태</option><option value="pending">신청중</option><option value="approved">확정</option><option value="canceled">취소</option><option value="completed">진행완료</option>
+                        </select>
+                        <button id="manualAddBtn" class="ml-2 inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 whitespace-nowrap">
+                          + 수동 등록
+                        </button>
+                    </div>
+                    <div class="text-sm text-gray-600 shrink-0">총 <b id="cntAll">0</b> · 신청중 <b id="cntPending">0</b> · 확정 <b id="cntApproved">0</b> · 취소 <b id="cntCanceled">0</b> · 완료 <b id="cntCompleted">0</b></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500" id="appTable">
+                        <thead class="bg-gray-50 text-xs text-gray-700 uppercase">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-center" data-sort="idx">순번<span class="sort-icon"></span></th>
+                                <th scope="col" class="px-6 py-3" data-sort="created_at">신청일<span class="sort-icon"></span></th>
+                                <th scope="col" class="px-6 py-3 text-center" data-sort="status">상태<span class="sort-icon"></span></th>
+                                <th scope="col" class="px-6 py-3" data-sort="school_name">기관명<span class="sort-icon"></span></th>
+                                <th scope="col" class="px-6 py-3" data-sort="training_type">연수 구분<span class="sort-icon"></span></th>
+                                <th scope="col" class="px-6 py-3" data-sort="course_title">강의명<span class="sort-icon"></span></th>
+                                <th scope="col" class="px-6 py-3" data-sort="schedule">확정 / 희망일시<span class="sort-icon"></span></th>
+                                <th scope="col" class="px-6 py-3" data-sort="contact">연락처<span class="sort-icon"></span></th>
+                                <th scope="col" class="px-6 py-3 text-center">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appTbody" class="divide-y"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        <!-- ⬇️ 헤더 버튼 오른쪽에 로그아웃 추가 -->
+<div class="flex items-center justify-between h-16 px-4 shrink-0 border-b border-gray-700">
+  <div class="admin-logo flex items-center gap-3">
+    <!-- ...로고 코드 생략 -->
+  </div>
+  <button id="logoutBtn" class="text-sm text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded hidden">로그아웃</button>
+</div>
+
+
+        <section id="view-courses" class="view-section hidden">
+            <h1 class="text-3xl font-bold mb-6 text-gray-800">강의 관리</h1>
+            <div class="bg-white p-6 rounded-lg shadow-md"><form id="courseForm" class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end"><input id="cTitle" class="md:col-span-3 rounded-md border-gray-300" placeholder="강의명" required /><select id="cType" class="rounded-md border-gray-300"><option value="AIDT">AIDT</option><option value="에듀테크">에듀테크</option></select><input id="cOrder" type="number" class="rounded-md border-gray-300" placeholder="표시순서" /><input id="cTools" class="md:col-span-2 rounded-md border-gray-300" placeholder="사용 도구(쉼표로)" /><input id="cRecommend" class="md:col-span-2 rounded-md border-gray-300" placeholder="추천 대상" /><input id="cEffect" class="md:col-span-2 rounded-md border-gray-300" placeholder="기대 효과" /><button class="w-full md:col-span-6 lg:col-span-1 inline-flex justify-center items-center px-4 py-2 border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">추가</button></form></div>
+            <div class="bg-white rounded-lg shadow-md mt-6 overflow-hidden"><div class="overflow-x-auto"><table class="w-full text-sm" id="courseTable"><thead class="bg-gray-50 text-xs text-gray-700 uppercase"><tr><th class="px-6 py-3">순서</th><th class="px-6 py-3">강의명</th><th class="px-6 py-3">구분</th><th class="px-6 py-3">도구</th><th class="px-6 py-3">추천</th><th class="px-6 py-3">효과</th><th class="px-6 py-3">삭제</th></tr></thead><tbody id="courseTbody" class="divide-y"></tbody></table></div></div>
+        </section>
+        <section id="view-calendar" class="view-section hidden">
+            <h1 class="text-3xl font-bold mb-6 text-gray-800">일정 관리</h1>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8"><div class="bg-white p-6 rounded-lg shadow-md"><div id="adminCalendar" class="space-y-4"><div class="flex items-center justify-between"><button id="adminPrevMonth" class="p-2 rounded-full hover:bg-gray-100">&lt;</button><h3 id="adminCalTitle" class="text-lg font-bold"></h3><button id="adminNextMonth" class="p-2 rounded-full hover:bg-gray-100">&gt;</button></div><div class="grid grid-cols-7 gap-1 text-center text-sm text-gray-500"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div><div id="adminCalGrid" class="cal-grid-admin"></div></div></div><div class="bg-white p-6 rounded-lg shadow-md"><div class="space-y-6"><div><label class="text-base font-medium">기본 오픈 요일</label><p class="text-sm text-gray-500">신청 받을 요일을 선택하세요.</p><fieldset class="mt-4"><div class="flex flex-wrap gap-3" id="weekdayWrap"></div></fieldset></div><div><label for="openDates" class="block text-sm font-medium">예외 오픈 날짜</label><input id="openDates" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" /><p class="mt-2 text-sm text-gray-500">달력에서 클릭하여 추가/제거</p></div><div><label for="closeDates" class="block text-sm font-medium">예외 휴무 날짜</label><input id="closeDates" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" /><p class="mt-2 text-sm text-gray-500">달력에서 클릭하여 추가/제거</p></div></div><div class="text-right mt-6 border-t pt-5"><button id="saveCalendarCfg" class="inline-flex items-center px-4 py-2 border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">설정 저장</button></div></div></div>
+        </section>
+    </main>
+</div>
+
+<div id="manageModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-40 hidden" role="dialog"><div class="modal-card bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col"><div class="modal-head flex items-center justify-between p-4 border-b"><h3 class="text-xl font-bold">신청 상세 및 관리</h3><button id="closeManage" aria-label="닫기" class="p-1 rounded-full hover:bg-gray-200"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div><div class="modal-body overflow-y-auto p-6 grid md:grid-cols-2 gap-6"><div class="space-y-4 p-4 border rounded-md bg-slate-50"><h4 class="font-semibold text-lg border-b pb-2">신청 정보</h4><div class="grid grid-cols-3 gap-2 text-sm"><div class="text-gray-500">상태</div><div class="col-span-2"><span id="mStatusBadge"></span></div></div><div class="grid grid-cols-3 gap-2 text-sm"><div class="text-gray-500">기관</div><div id="mSchool" class="col-span-2 font-medium"></div></div><div class="grid grid-cols-3 gap-2 text-sm"><div class="text-gray-500">담당자</div><div id="mContactName" class="col-span-2 font-medium"></div></div><div class="grid grid-cols-3 gap-2 text-sm"><div class="text-gray-500">이메일</div><div id="mEmail" class="col-span-2 font-medium"></div></div><div class="grid grid-cols-3 gap-2 text-sm"><div class="text-gray-500">연락처</div><div id="mPhone" class="col-span-2 font-medium"></div></div><div class="grid grid-cols-3 gap-2 text-sm"><div class="text-gray-500">연수 구분</div><div id="mType" class="col-span-2 font-medium"></div></div><div class="grid grid-cols-3 gap-2 text-sm"><div class="text-gray-500">강의명</div><div id="mCourse" class="col-span-2 font-medium"></div></div><div class="grid grid-cols-3 gap-2 text-sm"><div class="text-gray-500">1순위</div><div id="mWish1" class="col-span-2 font-medium"></div></div><div class="grid grid-cols-3 gap-2 text-sm"><div class="text-gray-500">2순위</div><div id="mWish2" class="col-span-2 font-medium"></div></div><div class="grid grid-cols-3 gap-2 text-sm"><div class="text-gray-500">문의사항</div><div id="mInquiry" class="col-span-2 whitespace-pre-wrap"></div></div></div><div class="space-y-4 p-4"><h4 class="font-semibold text-lg border-b pb-2">관리자 입력</h4><div><label class="block text-sm font-medium mb-1">상태 변경</label><select id="mStatus" class="block w-full rounded-md border-gray-300 shadow-sm"></select></div><div><label class="block text-sm font-medium mb-1">확정 일정</label><input id="mConfirmDT" type="datetime-local" class="block w-full rounded-md border-gray-300 shadow-sm" step="1800" /></div><div><label class="block text-sm font-medium mb-1">메모</label><textarea id="mMemo" rows="6" class="block w-full rounded-md border-gray-300 shadow-sm"></textarea></div></div></div><div class="modal-foot flex justify-end gap-2 p-4 border-t bg-gray-50"><button id="mOk" class="px-4 py-2 border rounded-md">닫기</button><button id="mSave" class="px-4 py-2 border-transparent rounded-md text-white bg-indigo-600 hover:bg-indigo-700">저장</button></div></div></div>
+
+<div id="manualAddModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-40 hidden">
+  <div class="modal-card bg-white rounded-lg shadow-xl w-full max-w-2xl">
+    <div class="modal-head flex items-center justify-between p-4 border-b">
+      <h3 class="text-xl font-bold">연수 신청 수동 등록</h3>
+      <button id="closeManualAdd" aria-label="닫기" class="p-1 rounded-full hover:bg-gray-200">✕</button>
+    </div>
+    <div class="modal-body p-6 space-y-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div><label for="manualSchoolName" class="block text-sm font-medium">기관명</label><input id="manualSchoolName" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" /></div>
+        <div><label for="manualContactName" class="block text-sm font-medium">담당자명</label><input id="manualContactName" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" /></div>
+        <div><label for="manualPhone" class="block text-sm font-medium">연락처</label><input id="manualPhone" type="tel" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" /></div>
+        <div><label for="manualStatus" class="block text-sm font-medium">상태</label><select id="manualStatus" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+        <div><label for="manualTrainingType" class="block text-sm font-medium">연수 구분</label><select id="manualTrainingType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+        <div><label for="manualCourseTitle" class="block text-sm font-medium">강의명</label><select id="manualCourseTitle" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select></div>
+      </div>
+      <div><label for="manualSchedule" class="block text-sm font-medium">희망/확정 일시</label><input id="manualSchedule" type="datetime-local" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" step="1800" /></div>
+      <div><label for="manualMemo" class="block text-sm font-medium">관리자 메모</label><textarea id="manualMemo" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea></div>
+    </div>
+    <div class="modal-foot flex justify-end gap-2 p-4 border-t bg-gray-50">
+      <button id="cancelManualAdd" class="px-4 py-2 border rounded-md">취소</button>
+      <button id="saveManualAdd" class="px-4 py-2 border-transparent rounded-md text-white bg-indigo-600 hover:bg-indigo-700">저장</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="fixed top-5 right-5 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 z-50"></div>
+<!-- 관리자 기능 실행을 위한 스크립트 -->
+<script type="module" src="./firebase.js"></script>
+<script type="module" src="./calendar.js"></script>
+<script type="module" src="./app.js"></script>
+<script type="module" src="./admin.js"></script>
+
+</body>
+</html>
