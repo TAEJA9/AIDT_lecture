@@ -12,13 +12,15 @@ import {
   onSnapshot,
   addDoc,
   deleteDoc,
-  doc
+  doc,
+  updateDoc,
+  getDoc,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import { initializeApp } from "./firebase.js";
 import { initCalendar } from "./calendar.js";
 
-// ✅ Firebase 설정 (이미 초기화된 config 사용 가능)
 const firebaseConfig = {
   apiKey: "AIzaSyB3jHIYbOwFiIc4nqT8F9M_AdKwMVVNyLk",
   authDomain: "aidtlecture-d1b2b.firebaseapp.com",
@@ -32,7 +34,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// ✅ 로그인 인증 확인
 onAuthStateChanged(auth, (user) => {
   if (!user) {
     window.location.href = "login.html";
@@ -42,7 +43,6 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// ✅ 로그아웃 버튼
 const logoutBtn = document.getElementById("logoutBtn");
 if (logoutBtn) {
   logoutBtn.addEventListener("click", async () => {
@@ -61,9 +61,10 @@ function initAdmin() {
   loadApplications();
   loadCourses();
   bindCourseForm();
+  setupCalendarConfig();
+  bindHamburger();
 }
 
-// ✅ 탭 전환 기능
 function initNav() {
   const navItems = document.querySelectorAll(".nav-item");
   const views = document.querySelectorAll(".view-section");
@@ -78,7 +79,17 @@ function initNav() {
   });
 }
 
-// ✅ 신청 내역 불러오기
+function bindHamburger() {
+  document.getElementById("asideToggle")?.addEventListener("click", () => {
+    document.getElementById("aside")?.classList.toggle("open");
+  });
+
+  document.getElementById("asideDesktopToggle")?.addEventListener("click", () => {
+    document.getElementById("aside")?.classList.toggle("collapsed");
+    document.getElementById("layout")?.classList.toggle("aside-collapsed");
+  });
+}
+
 function loadApplications() {
   const tbody = document.getElementById("appTbody");
   if (!tbody) return;
@@ -104,7 +115,6 @@ function loadApplications() {
   });
 }
 
-// ✅ 강의 목록 불러오기
 function loadCourses() {
   const tbody = document.getElementById("courseTbody");
   if (!tbody) return;
@@ -136,7 +146,6 @@ function loadCourses() {
   });
 }
 
-// ✅ 강의 등록 폼 처리
 function bindCourseForm() {
   const form = document.getElementById("courseForm");
   if (!form) return;
@@ -162,5 +171,55 @@ function bindCourseForm() {
     });
 
     form.reset();
+  });
+}
+
+function setupCalendarConfig() {
+  const weekdayWrap = document.getElementById("weekdayWrap");
+  const openDatesEl = document.getElementById("openDates");
+  const closeDatesEl = document.getElementById("closeDates");
+  const saveBtn = document.getElementById("saveCalendarCfg");
+
+  if (!weekdayWrap || !openDatesEl || !closeDatesEl || !saveBtn) return;
+
+  const weekLabels = ["일", "월", "화", "수", "목", "금", "토"];
+  const weekdayChecks = [];
+
+  for (let i = 0; i < 7; i++) {
+    const label = document.createElement("label");
+    label.className = "flex items-center gap-2 text-sm text-gray-700";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.value = i;
+    input.className = "checkbox";
+    label.appendChild(input);
+    label.appendChild(document.createTextNode(weekLabels[i]));
+    weekdayWrap.appendChild(label);
+    weekdayChecks.push(input);
+  }
+
+  getDoc(doc(db, "config", "calendar")).then((snap) => {
+    if (snap.exists()) {
+      const data = snap.data();
+      (data.openWeekdays || []).forEach((v) => {
+        weekdayChecks[v].checked = true;
+      });
+      openDatesEl.value = (data.extraOpenDates || []).join(", ");
+      closeDatesEl.value = (data.extraCloseDates || []).join(", ");
+    }
+  });
+
+  saveBtn.addEventListener("click", async () => {
+    const openWeekdays = weekdayChecks.filter((c) => c.checked).map((c) => Number(c.value));
+    const extraOpenDates = openDatesEl.value.split(/[,\s]+/).map((s) => s.trim()).filter(Boolean);
+    const extraCloseDates = closeDatesEl.value.split(/[,\s]+/).map((s) => s.trim()).filter(Boolean);
+
+    await setDoc(doc(db, "config", "calendar"), {
+      openWeekdays,
+      extraOpenDates,
+      extraCloseDates
+    });
+
+    alert("저장되었습니다.");
   });
 }
