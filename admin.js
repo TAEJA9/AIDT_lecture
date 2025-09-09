@@ -253,7 +253,7 @@ const manualAddModal = $('manualAddModal');
 const manualTrainingType = $('manualTrainingType');
 const manualCourseTitle = $('manualCourseTitle');
 function openManualAddModal() {
-  $('manualAddModal').querySelector('form')?.reset();
+  manualAddModal.querySelector('form')?.reset();
   $('manualStatus').innerHTML = Object.keys(STATE_BADGE).map(k => `<option value="${k}">${STATE_BADGE[k].text}</option>`).join('');
   manualTrainingType.innerHTML = `<option value="">선택</option><option value="AIDT">AIDT</option><option value="에듀테크">에듀테크</option>`;
   manualCourseTitle.innerHTML = `<option value="">연수 구분을 먼저 선택하세요</option>`;
