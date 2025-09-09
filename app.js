@@ -26,7 +26,7 @@ const $ = (id)=>document.getElementById(id);
 const toast = (m)=>{ const t=$("toast"); if(!t) return; t.textContent=m; t.classList.remove("hidden"); setTimeout(()=>t.classList.add("hidden"),1500); };
 
 /* =============================================================================
-   프로그램 카드/드롭다운 (기존 코드와 동일)
+   프로그램 카드/드롭다운
 ============================================================================= */
 const gridA = $("gridAIDT"), gridE = $("gridEDU"), empty = $("programEmpty");
 const tabA  = $("tabAIDT"), tabE  = $("tabEDU");
@@ -47,12 +47,11 @@ document.querySelectorAll('input[name="trainingType"]').forEach(r=>{r.addEventLi
 
 
 /* =============================================================================
-   ⭐️ [수정/추가] 신청 시간 검증 및 조정
+   신청 시간 검증 및 조정
 ============================================================================= */
 const wish1DT = $("wish1DT");
 const wish2DT = $("wish2DT");
 
-// 1. 최소 날짜 설정 (2주 후부터)
 (function setMinDate(){
   const today = new Date();
   const minDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14, 0, 0, 0);
@@ -65,33 +64,25 @@ const wish2DT = $("wish2DT");
   if (wish2DT) wish2DT.min = minStr;
 })();
 
-// 2. 시간 검증 함수 (09:00 ~ 20:00)
 function validateTimeRange(inputEl, warnElId) {
   const warnEl = $(warnElId);
   if (!inputEl || !inputEl.value) {
     if (warnEl) warnEl.textContent = "";
     return true;
   }
-
   const timePart = inputEl.value.split('T')[1];
   if (!timePart) return true;
-
   const hour = parseInt(timePart.split(':')[0], 10);
-  
-  // 9시 이전이거나, 20시를 초과한 경우 (20:00, 20:30은 괜찮음)
   if (hour < 9 || hour > 20) {
     if (warnEl) warnEl.textContent = "⚠ 신청 시간은 09:00 ~ 20:00 사이만 가능합니다.";
     toast("신청 시간은 09:00 ~ 20:00 사이만 가능합니다.");
-    inputEl.value = ""; // 잘못된 값이면 비워버림
+    inputEl.value = ""; 
     return false;
   }
-  
   if (warnEl) warnEl.textContent = "";
   return true;
 }
 
-// 3. 30분 단위로 시간을 맞춰주는 기능 (HTML의 step="1800" 속성과 연동)
-//    브라우저에 따라 UI는 달라도, 값은 30분 단위로 맞춰짐
 function snapTo30min(inputEl) {
   if(!inputEl || !inputEl.value) return;
   const [date, time] = inputEl.value.split('T');
@@ -99,24 +90,16 @@ function snapTo30min(inputEl) {
   let [h, m] = time.split(':').map(Number);
   const snappedM = (m < 15) ? 0 : (m < 45 ? 30 : 0);
   if(m >= 45) h = (h + 1) % 24;
-  
   const pad = n => String(n).padStart(2,'0');
   inputEl.value = `${date}T${pad(h)}:${pad(snappedM)}`;
 }
 
-// 4. 이벤트 리스너에 검증 함수 연결
-wish1DT?.addEventListener('change', () => {
-  snapTo30min(wish1DT);
-  validateTimeRange(wish1DT, "wish1Warn");
-});
-wish2DT?.addEventListener('change', () => {
-  snapTo30min(wish2DT);
-  validateTimeRange(wish2DT, "wish2Warn");
-});
+wish1DT?.addEventListener('change', () => { snapTo30min(wish1DT); validateTimeRange(wish1DT, "wish1Warn"); });
+wish2DT?.addEventListener('change', () => { snapTo30min(wish2DT); validateTimeRange(wish2DT, "wish2Warn"); });
 
 
 /* =============================================================================
-   신청 폼 제출 (기존 코드와 동일)
+   신청 폼 제출
 ============================================================================= */
 let CAL_RULE={openWeekdays:[1,2,3,4,5], extraOpenDates:[], extraCloseDates:[]};
 (async function loadPolicy(){ try{ const s=await getDoc(doc(db,"config","calendar")); if(s.exists()) CAL_RULE=s.data(); }catch{} })();
@@ -172,5 +155,13 @@ $("applicationForm")?.addEventListener("submit", async (e)=>{
   }catch(err){ toast("신청 오류: "+(err.message||err)); }
 });
 
-// 내 신청 현황 관련 로직 (기존과 동일)
 function populateForm(d){ setTimeout(()=>{ if(courseDropdown){ courseDropdown.value=d.course_title||""; courseWrap?.classList.remove("hidden"); } }, 150); if(wish1DT) wish1DT.value = (d.wish1Date && d.wish1Time) ? `${d.wish1Date}T${d.wish1Time}` : ""; if(wish2DT) wish2DT.value = (d.wish2Date && d.wish2Time) ? `${d.wish2Date}T${d.wish2Time}` : ""; $("attendees") && ($("attendees").value = d.attendees || 1); $("inquiry") && ($("inquiry").value = d.inquiry || ""); }
+
+// ⭐️ [추가] ESC 키로 모든 모달 닫기
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    document.querySelectorAll('.modal').forEach(modal => {
+      modal.classList.add('hidden');
+    });
+  }
+});
