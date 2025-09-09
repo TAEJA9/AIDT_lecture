@@ -9,14 +9,20 @@ body { -webkit-font-smoothing: antialiased; }
 .hero-sky{
   position:relative;
   min-height: 100vh;
-  /* ⭐️ [수정] 배경 이미지를 네가 올린 top.png 파일로 변경했어! */
-  background-image:
-    linear-gradient(to bottom, rgba(3, 7, 18, .55), rgba(3,7,18,.15) 45%, rgba(255,255,255,0)),
-    url('./top.png'); 
+  /* ⭐️ [수정] 어둡게 보이던 그림자(linear-gradient) 효과 제거 */
+  background-image: url('./top.png'); 
   background-size:cover;
   background-position:center;
 }
 .glass{background: rgba(255,255,255,0.18); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.25);}
+
+/* ⭐️ [추가] 모바일 화면(가로 768px 이하)에서는 다른 이미지를 보여주도록 설정 */
+@media (max-width: 768px) {
+  .hero-sky {
+    /* 모바일용으로 세로가 긴 이미지를 만들어서 'top-mobile.png'로 업로드 */
+    background-image: url('./top-mobile.png'); 
+  }
+}
 
 /* PROCESS TIMELINE */
 .process-line{
